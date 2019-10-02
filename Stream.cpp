@@ -7,8 +7,14 @@
 #include <fstream>
 #include <cmath>
 #include <bits/stdc++.h>
+#include "cySampleElim.h"
+#include "cyPointCloud.h"
+#include "cyHeap.h"
+#include "cyPoint.h"
 #include "ArithmeticHeader.h"
-//#include "ArithmeticHeader.cpp"
+#include <cstdlib>
+#include <ctime>
+//using namespace std;
 using namespace std;
 
 Polyhedron::Polyhedron(string input, string output)
@@ -86,10 +92,8 @@ bool Polyhedron::isInterior(Triangle *tri){
         bool flag = true;
         int upNormalCt=0;
         int downNormalCt=0;
-	//current triangle 
 	double *triangleInTriList;
 	triangleInTriList = new double[9];
-	//target triangle
 	double *points;
 	points = new double[9];
 	int i;
@@ -158,16 +162,10 @@ void Polyhedron::copyToExterior(){
                 double p2[3] = {pts[3],pts[4],pts[5]};
                 double p3[3] = {pts[6],pts[7],pts[8]};
                 Triangle *tria = new Triangle(p1,p2,p3);
-     	  
-        if(isInterior(tria)){
-            oneHot[i] = 0;
-        }
-        else{
-            oneHot[i] = 1;
-            exteriorCount++;
-
-        }
-
+            	oneHot[i] = !isInterior(tria);
+    }
+    for(int j = 0; j < (tricount); j++){
+   	exteriorCount += oneHot[j];
     }
     exteriorArray = oneHot;
     cout << "EXTERIOR TRIANGLES: " << exteriorCount << endl;
@@ -176,10 +174,12 @@ void Polyhedron::copyToExterior(){
 
 void Polyhedron::sampleLargeTriangles(){
     int bigCount = 0;
+    double bigSurfaceArea = 0;
     double *pts;
     pts = new double[9];
     int i;
-    #pragma omp parallel for private(i)
+    int pointCt=0;
+    //#pragma omp parallel for private(i)
     for(int i = 0;i < tricount; i++){
 	if(exteriorArray[i] == 1){
 		triangleArray[i].getPoints2(pts);
@@ -188,14 +188,66 @@ void Polyhedron::sampleLargeTriangles(){
                 double p3[3] = {pts[6],pts[7],pts[8]};
                 Triangle *tri = new Triangle(p1,p2,p3);
         	double area = tri->getArea();
-        	if(area > 5.0){
-	    		tri->PlacePointInTriangle();
+        	if(area > 4.0){
+			bigSurfaceArea+=area;
+			for(int i = 0; i < area;i++){
+				//tri->PlacePointInTriangle();
+				pointCt++;
+			}
             		bigCount++;
         	}
 	}
     }
+ 
+    cout << "POINT COUNT IS: " << pointCt << endl;    
+
+    double *tempPt;
+    std::vector< cy::Point3f > inputPoints(pointCt);
+    int ct = 0;
+    for(int l = 0;l < tricount; l++){
+        if(exteriorArray[l] == 1){
+                triangleArray[l].getPoints2(pts);
+                double p1[3] = {pts[0],pts[1],pts[2]};
+                double p2[3] = {pts[3],pts[4],pts[5]};
+                double p3[3] = {pts[6],pts[7],pts[8]};
+                Triangle *tri = new Triangle(p1,p2,p3);
+                double area = tri->getArea();
+                if(area > 4.0){
+                        for(int j = 0; j < area;j++){
+                                tempPt = tri->PlacePointInTriangle();
+               		        inputPoints[ct].x = (float)tempPt[0];
+               		        inputPoints[ct].y = (float)tempPt[1];
+              		        inputPoints[ct].z = (float)tempPt[2];
+				cout << "( " << tempPt[0] << " , " << tempPt[1] << " , " << tempPt[2] << " )" << endl;
+				ct++;
+                        }
+		cout << "DID " << ct << " POINTS SO FAR" << endl;
+                }
+        }
+    }
+    int numpts = floor(bigSurfaceArea/5);
+    cout << "NUMBER OUTPUTTED: " << numpts << endl;
+    //int numpts = 20;
+    cy::WeightedSampleElimination< cy::Point3f, float, 2, int > wse;
+    vector< cy::Point3f > outputPoints(numpts);
+    float d_max = 1.5;
+ 
+    //float d_max = 1.1;
+    wse.Eliminate( inputPoints.data(), inputPoints.size(),outputPoints.data(), outputPoints.size(), d_max, 2);
+     
+    FILE* fp;
+    fp = fopen("anything.xyz","w");
+    fprintf(fp,"%d\n",(numpts-1));
+    for(int i = 0; i < numpts; i++){
+         cout << "C     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
+         fprintf(fp,"O   %1.6f      %1.6f     %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
+    }
+    fclose(fp);
+    
+
     cout << "BIG TRIANGLES: " << bigCount << endl;
-    delete[] pts;
+    cout << "BIG SURFACE AREA: " << bigSurfaceArea << endl;
+  
 }
 
 //**********************************************************************************************************************************************************************************************************//
