@@ -98,7 +98,7 @@ bool Polyhedron::isInterior(Triangle *tri){
 	points = new double[9];
 	int i;
 	#pragma omp parallel for private(i)
-        for(int i = 0; i < tricount; i++){
+	for(int i = 0; i < tricount; i++){
 		triangleArray[i].getPoints2(triangleInTriList);
 		tri->getPoints2(points);
 	
@@ -147,6 +147,7 @@ bool Polyhedron::isInterior(Triangle *tri){
         }
                 return flag;
 }
+             
 
 
 void Polyhedron::copyToExterior(){
@@ -171,6 +172,68 @@ void Polyhedron::copyToExterior(){
     cout << "EXTERIOR TRIANGLES: " << exteriorCount << endl;
     delete[] pts;
 }
+
+/*
+bool Polyhedron::checkDistanceCutoff(double *b, Triangle *tri){
+        bool flag = true;
+        int upNormalCt=0;
+        int downNormalCt=0;
+        double *triangleInTriList;
+        triangleInTriList = new double[9];
+        double *points;
+        points = new double[9];
+        int i;
+        #pragma omp parallel for private(i)
+        for(int i = 0; i < tricount; i++){
+                triangleArray[i].getPoints2(triangleInTriList);
+                tri->getPoints2(points);
+
+                double planePoint[3] = {triangleInTriList[0],triangleInTriList[1],triangleInTriList[2]};
+                double planeNormal[3] ={triangleArray[i].getNormal()[0],triangleArray[i].getNormal()[1],triangleArray[i].getNormal()[2]};
+                double linePoint[3] = {b[0],b[1],b[2]};
+
+                double V1[3] = {points[6]-points[0],points[7]-points[1],points[8]-points[2]};
+                double V2[3] = {points[3]-points[0],points[4]-points[1],points[5]-points[2]};
+                double lineDir[3] = {V1[1]*V2[2]-V1[2]*V2[1],-(V1[0]*V2[2]-V1[2]*V2[0]),V1[0]*V2[1]-V1[1]*V2[0]};
+
+                double dMag = sqrt(lineDir[0]*lineDir[0] + lineDir[1]*lineDir[1] + lineDir[2]*lineDir[2]);
+                double lineDirNormalize[3] = {lineDir[0]/dMag,lineDir[1]/dMag,lineDir[2]/dMag};
+
+                double tNum = (planeNormal[0]*planePoint[0] + planeNormal[1]*planePoint[1] + planeNormal[2]*planePoint[2])
+                - (planeNormal[0]*linePoint[0] + planeNormal[1]*linePoint[1] + planeNormal[2]*linePoint[2]);
+                double tDenom = planeNormal[0]*lineDirNormalize[0] + planeNormal[1]*lineDirNormalize[1] + planeNormal[2]*lineDirNormalize[2];
+                double t = tNum/tDenom;
+                double projectedPoint[3] = {linePoint[0] + (lineDirNormalize[0]*t) ,linePoint[1] +(lineDirNormalize[1]*t) ,linePoint[2] +(lineDirNormalize[2]*t)};
+
+                double p1[3] = {triangleInTriList[0],triangleInTriList[1],triangleInTriList[2]};
+                double p2[3] = {triangleInTriList[3],triangleInTriList[4],triangleInTriList[5]};
+                double p3[3] = {triangleInTriList[6],triangleInTriList[7],triangleInTriList[8]};
+                Triangle *tria = new Triangle(p1,p2,p3);
+                        if(pointInTriangle(tria,projectedPoint[0],projectedPoint[1],projectedPoint[2]) == true){
+                                double C2[3] = {triangleArray[i].getCenter()[0],triangleArray[i].getCenter()[1],triangleArray[i].getCenter()[2]};
+                                double TVector[3] = {C2[0]-linePoint[0],C2[1]-linePoint[1],C2[2]-linePoint[2]};
+                                double TVectorMag = sqrt(TVector[0]*TVector[0]+TVector[1]*TVector[1]+TVector[2]*TVector[2]);
+                                double UnitT[3] = {TVector[0]/TVectorMag,TVector[1]/TVectorMag,TVector[2]/TVectorMag};
+
+                                double dot = UnitT[0]*lineDirNormalize[0] + UnitT[1]*lineDirNormalize[1]+UnitT[2]*lineDirNormalize[2];
+                                if(dot >= 0){
+                                        upNormalCt++;
+                                }
+                                else{
+                                        downNormalCt++;
+                                }
+                        }
+        }
+        upNormalCt--;
+        downNormalCt--;
+        delete[] triangleInTriList;
+        delete[] points;
+        if(upNormalCt*downNormalCt == 0){
+                flag = false;
+        }
+                return flag;
+}
+*/
 
 void Polyhedron::sampleLargeTriangles(){
     int bigCount = 0;
@@ -204,8 +267,10 @@ void Polyhedron::sampleLargeTriangles(){
     double *tempPt;
     std::vector< cy::Point3f > inputPoints(pointCt);
     int ct = 0;
+    int limit = pointCt - 10;
+    cout << "LIMIT: " << limit << endl;
     for(int l = 0;l < tricount; l++){
-        if(exteriorArray[l] == 1){
+        if((exteriorArray[l] == 1) && (ct < limit)){
                 triangleArray[l].getPoints2(pts);
                 double p1[3] = {pts[0],pts[1],pts[2]};
                 double p2[3] = {pts[3],pts[4],pts[5]};
@@ -214,23 +279,25 @@ void Polyhedron::sampleLargeTriangles(){
                 double area = tri->getArea();
                 if(area > 4.0){
                         for(int j = 0; j < area;j++){
-                                tempPt = tri->PlacePointInTriangle();
-               		        inputPoints[ct].x = (float)tempPt[0];
-               		        inputPoints[ct].y = (float)tempPt[1];
-              		        inputPoints[ct].z = (float)tempPt[2];
-				cout << "( " << tempPt[0] << " , " << tempPt[1] << " , " << tempPt[2] << " )" << endl;
-				ct++;
+                             tempPt = tri->PlacePointInTriangle();
+               		     inputPoints[ct].x = (float)tempPt[0];
+               		     inputPoints[ct].y = (float)tempPt[1];
+              		     inputPoints[ct].z = (float)tempPt[2];
+		             //cout << "( " << tempPt[0] << " , " << tempPt[1] << " , " << tempPt[2] << " )" << endl;
+			     ct++;
+			     //cout << "count: " << ct << endl;
                         }
 		cout << "DID " << ct << " POINTS SO FAR" << endl;
                 }
         }
     }
+	
     int numpts = floor(bigSurfaceArea/5);
     cout << "NUMBER OUTPUTTED: " << numpts << endl;
     //int numpts = 20;
     cy::WeightedSampleElimination< cy::Point3f, float, 2, int > wse;
     vector< cy::Point3f > outputPoints(numpts);
-    float d_max = 1.5;
+    float d_max = 1.0;
  
     //float d_max = 1.1;
     wse.Eliminate( inputPoints.data(), inputPoints.size(),outputPoints.data(), outputPoints.size(), d_max, 2);

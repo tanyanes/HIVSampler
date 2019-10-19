@@ -146,7 +146,7 @@ double* Triangle::PlacePointInTriangle(){
 	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, ALPHA, transmatrix, K, point, N, BETA, C, N);
 	double *translated = new double[3] {C[0] + transvector[0] , C[1] + transvector[1] , C[2] + transvector[2]}; 
 
-	double r = 1.0f;
+	double r = 1.5f;
 	double para1 = getDistance(translated[0],translated[1],translated[2],point1[0],point1[1],point1[2]);
 	double para2 = getDistance(translated[0],translated[1],translated[2],point2[0],point2[1],point2[2]);
 	double para3 = getDistance(translated[0],translated[1],translated[2],point3[0],point3[1],point3[2]);
@@ -157,7 +157,7 @@ double* Triangle::PlacePointInTriangle(){
 		PlacePointInTriangle();
 	}
 	else{
-		printf("O               %1.8f                %1.8f            %1.8f\n",translated[0],translated[1],translated[2]);
+		//printf("%1.8f     %1.8f     %1.8f\n",translated[0],translated[1],translated[2]);
 		return translated;
 	}
 	delete[] C;
