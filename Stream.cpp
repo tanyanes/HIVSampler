@@ -27,9 +27,11 @@ Polyhedron::Polyhedron(string input, string output)
 		pointct++;
 	}
 	double *points = new double[3*pointct-3];
+	//double *points = new double[3*pointct];
 	points = readOutputToArrays(output);
 	pointArray = points;
 	Triangle *triArray = new Triangle[(pointct-1)/3];
+	//Triangle *triArray = new Triangle[pointct/3];
 	setTriCount(input,output);
 	for(int i = 0; i < (3*pointct-3);i+=9){
 		double *aa = new double[3] {pointArray[i+0],pointArray[i+1],pointArray[i+2]};
@@ -173,8 +175,8 @@ void Polyhedron::copyToExterior(){
     delete[] pts;
 }
 
-/*
-bool Polyhedron::checkDistanceCutoff(double *b, Triangle *tri){
+
+bool Polyhedron::checkDistanceCutoff(int index, double *b, Triangle *tri){
         bool flag = true;
         int upNormalCt=0;
         int downNormalCt=0;
@@ -185,8 +187,10 @@ bool Polyhedron::checkDistanceCutoff(double *b, Triangle *tri){
         int i;
         #pragma omp parallel for private(i)
         for(int i = 0; i < tricount; i++){
-                triangleArray[i].getPoints2(triangleInTriList);
-                tri->getPoints2(points);
+		if(exteriorArray[i] == 1){
+                	triangleArray[i].getPoints2(triangleInTriList);
+                	tri->getPoints2(points);
+		
 
                 double planePoint[3] = {triangleInTriList[0],triangleInTriList[1],triangleInTriList[2]};
                 double planeNormal[3] ={triangleArray[i].getNormal()[0],triangleArray[i].getNormal()[1],triangleArray[i].getNormal()[2]};
@@ -223,17 +227,24 @@ bool Polyhedron::checkDistanceCutoff(double *b, Triangle *tri){
                                         downNormalCt++;
                                 }
                         }
+		}
         }
         upNormalCt--;
         downNormalCt--;
-        delete[] triangleInTriList;
-        delete[] points;
         if(upNormalCt*downNormalCt == 0){
                 flag = false;
         }
-                return flag;
+	else{
+		exteriorArray[index] = 0;
+		cout << "MODIFIED" << endl;
+		cout << exteriorArray[index] << endl;
+	}
+	
+	delete[] triangleInTriList;
+	delete[] points;
+	return flag;
 }
-*/
+
 
 void Polyhedron::sampleLargeTriangles(){
     int bigCount = 0;
@@ -242,6 +253,7 @@ void Polyhedron::sampleLargeTriangles(){
     pts = new double[9];
     int i;
     int pointCt=0;
+    double *check = new double[3] {1.2, 2.2, 3.3};
     //#pragma omp parallel for private(i)
     for(int i = 0;i < tricount; i++){
 	if(exteriorArray[i] == 1){
@@ -251,62 +263,85 @@ void Polyhedron::sampleLargeTriangles(){
                 double p3[3] = {pts[6],pts[7],pts[8]};
                 Triangle *tri = new Triangle(p1,p2,p3);
         	double area = tri->getArea();
-        	if(area > 4.0){
-			bigSurfaceArea+=area;
-			for(int i = 0; i < area;i++){
-				//tri->PlacePointInTriangle();
-				pointCt++;
+		//cout << "TRIANGLE IS: " << pts[0] << " , " << pts[1] << " , " << pts[2] << endl;
+		//cout << "-------------" << pts[3] << " , " << pts[4] << " , " << pts[5] << endl;
+		//cout << "-------------" << pts[6] << " , " << pts[7] << " , " << pts[8] << endl;
+		//triangles are fine!
+		int cumsum = 0;
+        	if(area > 3.5){
+			for (int k = 0; k < 20; k++){
+				//cout << "TRIANGLE IS: " << pts[0] << " , " << pts[1] << " , " << pts[2] << endl;
+                		//cout << "-------------" << pts[3] << " , " << pts[4] << " , " << pts[5] << endl;
+                		//cout << "-------------" << pts[6] << " , " << pts[7] << " , " << pts[8] << endl;
+				check = tri->PlacePointInTriangle();
+				cout << "check: (" << check[0] <<" , " <<  check[1] << " , " << check[2] << ") " << endl;
+				cumsum += checkDistanceCutoff(i,check,tri);
+				delete[] check;
 			}
+			//delete[] check;
+
+			if (cumsum == 0){
+				bigSurfaceArea+=area;
+				for(int i = 0; i < area;i++){
+					pointCt++;
+				}
             		bigCount++;
+			}
+			
         	}
 	}
     }
- 
+    
     cout << "POINT COUNT IS: " << pointCt << endl;    
-
+	
     double *tempPt;
     std::vector< cy::Point3f > inputPoints(pointCt);
     int ct = 0;
-    int limit = pointCt - 10;
-    cout << "LIMIT: " << limit << endl;
+    
     for(int l = 0;l < tricount; l++){
-        if((exteriorArray[l] == 1) && (ct < limit)){
+        if((exteriorArray[l] == 1)){
                 triangleArray[l].getPoints2(pts);
                 double p1[3] = {pts[0],pts[1],pts[2]};
                 double p2[3] = {pts[3],pts[4],pts[5]};
                 double p3[3] = {pts[6],pts[7],pts[8]};
                 Triangle *tri = new Triangle(p1,p2,p3);
                 double area = tri->getArea();
-                if(area > 4.0){
-                        for(int j = 0; j < area;j++){
-                             tempPt = tri->PlacePointInTriangle();
-               		     inputPoints[ct].x = (float)tempPt[0];
-               		     inputPoints[ct].y = (float)tempPt[1];
-              		     inputPoints[ct].z = (float)tempPt[2];
-		             //cout << "( " << tempPt[0] << " , " << tempPt[1] << " , " << tempPt[2] << " )" << endl;
-			     ct++;
-			     //cout << "count: " << ct << endl;
-                        }
-		cout << "DID " << ct << " POINTS SO FAR" << endl;
+		cout << "area " << area << endl; 
+		
+                if(area > 3.5){
+			for(int j = 0; j < area ; j++){
+				tempPt = tri->PlacePointInTriangle();
+				if (ct < pointCt){
+                        		inputPoints[ct].x = (float)tempPt[0];
+                        		inputPoints[ct].y = (float)tempPt[1];
+                        		inputPoints[ct].z = (float)tempPt[2];
+				}
+				//cout << tempPt[0] << " " << tempPt[1] << " " << tempPt[2] << endl;
+				cout << ct << endl;
+				ct++;
+			}
                 }
+	
         }
     }
-	
+
     int numpts = floor(bigSurfaceArea/5);
-    cout << "NUMBER OUTPUTTED: " << numpts << endl;
     //int numpts = 20;
     cy::WeightedSampleElimination< cy::Point3f, float, 2, int > wse;
     vector< cy::Point3f > outputPoints(numpts);
     float d_max = 1.0;
  
     //float d_max = 1.1;
+    for (int j = 0; j < (pointCt-3);j++){
+	cout << inputPoints[j].x << " " << inputPoints[j].y << " " << inputPoints[j].z << endl;
+    }
     wse.Eliminate( inputPoints.data(), inputPoints.size(),outputPoints.data(), outputPoints.size(), d_max, 2);
      
     FILE* fp;
     fp = fopen("anything.xyz","w");
     fprintf(fp,"%d\n",(numpts-1));
     for(int i = 0; i < numpts; i++){
-         cout << "C     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
+         cout << "O     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
          fprintf(fp,"O   %1.6f      %1.6f     %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
     }
     fclose(fp);
@@ -314,7 +349,9 @@ void Polyhedron::sampleLargeTriangles(){
 
     cout << "BIG TRIANGLES: " << bigCount << endl;
     cout << "BIG SURFACE AREA: " << bigSurfaceArea << endl;
-  
+    delete[] pts;
+    delete[] tempPt;
+
 }
 
 //**********************************************************************************************************************************************************************************************************//

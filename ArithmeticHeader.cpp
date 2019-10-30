@@ -154,12 +154,16 @@ double* Triangle::PlacePointInTriangle(){
 	//cout << para1 << "  |  " << para2 << "  |  " << para3 << endl;
 	
 	if((para1 < r) || (para2 < r) || (para3 < r)){
+		delete[] C;
+                delete[] translated;
+                delete[] point;
 		PlacePointInTriangle();
 	}
 	else{
 		//printf("%1.8f     %1.8f     %1.8f\n",translated[0],translated[1],translated[2]);
+		delete[] C;
+        	//delete[] translated;
+        	delete[] point;
 		return translated;
 	}
-	delete[] C;
-	delete[] translated;
 }

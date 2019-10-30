@@ -22,4 +22,5 @@ public:
 	void parseToOutput(string input, string output);
 	double*  readOutputToArrays(string output);
 	double*  printAreas(string output);
+	bool checkDistanceCutoff(int index, double *b, Triangle* tri);
 };
