@@ -14,7 +14,6 @@
 #include "ArithmeticHeader.h"
 #include <cstdlib>
 #include <ctime>
-//using namespace std;
 using namespace std;
 
 Polyhedron::Polyhedron(string input, string output)
@@ -27,11 +26,9 @@ Polyhedron::Polyhedron(string input, string output)
 		pointct++;
 	}
 	double *points = new double[3*pointct-3];
-	//double *points = new double[3*pointct];
 	points = readOutputToArrays(output);
 	pointArray = points;
 	Triangle *triArray = new Triangle[(pointct-1)/3];
-	//Triangle *triArray = new Triangle[pointct/3];
 	setTriCount(input,output);
 	for(int i = 0; i < (3*pointct-3);i+=9){
 		double *aa = new double[3] {pointArray[i+0],pointArray[i+1],pointArray[i+2]};
@@ -42,7 +39,9 @@ Polyhedron::Polyhedron(string input, string output)
 	}
 	triangleArray = triArray;
 	copyToExterior();
+	iteration = 0;
 	sampleLargeTriangles();
+	combineDocs();
 	cout << "MADE A POLYHEDRON" << endl;
 }
 
@@ -83,7 +82,7 @@ bool Polyhedron::pointInTriangle(Triangle* tri, double x, double y ,double z){
 	double myArea = tri->getArea();
 	double areasum = A1 + A2 + A3;
 	double areadiff = areasum - myArea;
-	if(abs(areadiff) < 0.01){
+	if(abs(areadiff) < 0.005){
 		boolz = true;
 	}
 	delete[] points;
@@ -171,7 +170,6 @@ void Polyhedron::copyToExterior(){
    	exteriorCount += oneHot[j];
     }
     exteriorArray = oneHot;
-    cout << "EXTERIOR TRIANGLES: " << exteriorCount << endl;
     delete[] pts;
 }
 
@@ -236,8 +234,6 @@ bool Polyhedron::checkDistanceCutoff(int index, double *b, Triangle *tri){
         }
 	else{
 		exteriorArray[index] = 0;
-		cout << "MODIFIED" << endl;
-		cout << exteriorArray[index] << endl;
 	}
 	
 	delete[] triangleInTriList;
@@ -263,22 +259,13 @@ void Polyhedron::sampleLargeTriangles(){
                 double p3[3] = {pts[6],pts[7],pts[8]};
                 Triangle *tri = new Triangle(p1,p2,p3);
         	double area = tri->getArea();
-		//cout << "TRIANGLE IS: " << pts[0] << " , " << pts[1] << " , " << pts[2] << endl;
-		//cout << "-------------" << pts[3] << " , " << pts[4] << " , " << pts[5] << endl;
-		//cout << "-------------" << pts[6] << " , " << pts[7] << " , " << pts[8] << endl;
-		//triangles are fine!
 		int cumsum = 0;
         	if(area > 3.5){
 			for (int k = 0; k < 20; k++){
-				//cout << "TRIANGLE IS: " << pts[0] << " , " << pts[1] << " , " << pts[2] << endl;
-                		//cout << "-------------" << pts[3] << " , " << pts[4] << " , " << pts[5] << endl;
-                		//cout << "-------------" << pts[6] << " , " << pts[7] << " , " << pts[8] << endl;
 				check = tri->PlacePointInTriangle();
-				cout << "check: (" << check[0] <<" , " <<  check[1] << " , " << check[2] << ") " << endl;
 				cumsum += checkDistanceCutoff(i,check,tri);
 				delete[] check;
 			}
-			//delete[] check;
 
 			if (cumsum == 0){
 				bigSurfaceArea+=area;
@@ -291,8 +278,6 @@ void Polyhedron::sampleLargeTriangles(){
         	}
 	}
     }
-    
-    cout << "POINT COUNT IS: " << pointCt << endl;    
 	
     double *tempPt;
     std::vector< cy::Point3f > inputPoints(pointCt);
@@ -306,7 +291,6 @@ void Polyhedron::sampleLargeTriangles(){
                 double p3[3] = {pts[6],pts[7],pts[8]};
                 Triangle *tri = new Triangle(p1,p2,p3);
                 double area = tri->getArea();
-		cout << "area " << area << endl; 
 		
                 if(area > 3.5){
 			for(int j = 0; j < area ; j++){
@@ -316,8 +300,6 @@ void Polyhedron::sampleLargeTriangles(){
                         		inputPoints[ct].y = (float)tempPt[1];
                         		inputPoints[ct].z = (float)tempPt[2];
 				}
-				//cout << tempPt[0] << " " << tempPt[1] << " " << tempPt[2] << endl;
-				cout << ct << endl;
 				ct++;
 			}
                 }
@@ -326,32 +308,78 @@ void Polyhedron::sampleLargeTriangles(){
     }
 
     int numpts = floor(bigSurfaceArea/5);
-    //int numpts = 20;
     cy::WeightedSampleElimination< cy::Point3f, float, 2, int > wse;
     vector< cy::Point3f > outputPoints(numpts);
     float d_max = 1.0;
- 
-    //float d_max = 1.1;
-    for (int j = 0; j < (pointCt-3);j++){
-	cout << inputPoints[j].x << " " << inputPoints[j].y << " " << inputPoints[j].z << endl;
-    }
     wse.Eliminate( inputPoints.data(), inputPoints.size(),outputPoints.data(), outputPoints.size(), d_max, 2);
-     
-    FILE* fp;
-    fp = fopen("anything.xyz","w");
-    fprintf(fp,"%d\n",(numpts-1));
-    for(int i = 0; i < numpts; i++){
-         cout << "O     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
-         fprintf(fp,"O   %1.6f      %1.6f     %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
-    }
-    fclose(fp);
     
+    if((numpts > 0) && (iteration == 0)){
+    	FILE* fp;
+    	fp = fopen("anything.xyz","w");
+    	for(int i = 0; i < numpts; i++){
+         	cout << "O     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
+         	fprintf(fp,"O   %1.6f      %1.6f     %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
+    	}
+    	fclose(fp);
+    }
+   if((numpts>0) && (iteration>0)){
+	FILE* fp;
+        fp = fopen("anything.xyz","a");
+        for(int i = 0; i < numpts; i++){
+                cout << "O     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
+                fprintf(fp,"O   %1.6f      %1.6f     %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
+        }
+        fclose(fp);
+   }
 
-    cout << "BIG TRIANGLES: " << bigCount << endl;
-    cout << "BIG SURFACE AREA: " << bigSurfaceArea << endl;
+double smallest = 20.0;    
+double counter = 0;
+    for(int n = 0; n < tricount; n++){
+	for(int j = 0; j < numpts;j++){
+		triangleArray[n].getPoints2(pts);
+        	double p1[3] = {pts[0],pts[1],pts[2]};
+        	double p2[3] = {pts[3],pts[4],pts[5]};
+        	double p3[3] = {pts[6],pts[7],pts[8]};
+        	Triangle *tri = new Triangle(p1,p2,p3);
+		double area = tri->getArea();
+		if (area < smallest){
+			smallest = area;
+		}
+		if((exteriorArray[n] == 1) && 
+		(pointInTriangle(tri,outputPoints[j].x,outputPoints[j].y,outputPoints[j].z))){
+			exteriorArray[n] = 0;
+			counter += area;
+		}
+	}
+    }
+
+    double areaRemaining = bigSurfaceArea - counter;
+    cout << "ITERATION: " << iteration << endl;
+    cout << "AREA REMAINING: " << areaRemaining << endl;
+    cout << "SMALLEST: " << smallest << endl;
+    if( areaRemaining > smallest){
+	iteration++;
+	sampleLargeTriangles();
+    }    
+
     delete[] pts;
     delete[] tempPt;
 
+}
+
+void Polyhedron::combineDocs(){
+	std::ifstream ifile("unsolved1.xyz");
+	std::ofstream ofile("anything.xyz", std::ios::app);
+
+	if (!ifile.is_open()) {
+    		cout << "access denied" << endl;
+	}
+  	else if (!ofile.is_open()) {
+        	cout << "access denied" << endl;
+        }
+        else {
+            ofile << ifile.rdbuf();
+        }
 }
 
 //**********************************************************************************************************************************************************************************************************//
@@ -397,7 +425,6 @@ double* Polyhedron::readOutputToArrays(string output){
     	while (getline(file, line)){
         	pointct++;	
  	}
-	//cout <<  " POINT COUNT IS: " << pointct;
 	
 	double** triPoints = new double*[pointct];
         for(int i = 0; i < pointct; ++i){
@@ -410,7 +437,6 @@ double* Polyhedron::readOutputToArrays(string output){
     		x = std::stod(&str[offset]); 
     		y = std::stod(&str[offset + 9]); 
     		z = std::stod(&str[offset + 19]);
-       		//cout <<  x << "  " << y << "  " << z << endl;
 		double *point = new double[3] {x,y,z}; 
 		if (ct < pointct){                
 			triPoints[ct] = point;
@@ -429,50 +455,10 @@ double* Polyhedron::readOutputToArrays(string output){
 	i++;
 	}
 	}
-	for(int i = 0; i < (3*pointct-3);i++){
-	 // cout << i << "   " << PointList[i] << endl;
-	}
 	for(int i = 0; i < pointct; ++i){
 		delete[] triPoints[i];
 	}
 	return PointList;
 }
-
- double* Polyhedron::printAreas(string output){
-	int pointct = 0;
-        string line;
-        ifstream file(output);
-        while (getline(file, line)){
-                pointct++;
-        }
-
-	double *triArray = new double[3*pointct-3];
-	triArray = readOutputToArrays(output);
-	//cout << triArray[0] << endl;
-	
-	double *Areas = new double[((pointct-1)/3)];
-	
-	for(int i = 0; i < (pointct*3); i+=9){
-		double *v1 = new double[3] {triArray[i+3]-triArray[i],triArray[i+4]-triArray[i+1],triArray[i+5]-triArray[i+2]};
-		//cout << "v1: " << v1[0] << " , " << v1[1] << " , " << v1[2] << endl;
-		double *v2 = new double[3] {triArray[i+6]-triArray[i],triArray[i+7]-triArray[i+1],triArray[i+8]-triArray[i+2]};
-		//cout << "v2: " << v2[0] << " , " << v2[1] << " , " << v2[2] << endl;
-		double *cross = new double[3] {(v1[1]*v2[2]-v1[2]*v2[1]),-(v1[0]*v2[2]-v1[2]*v2[0]),(v1[0]*v2[1]-v1[1]*v2[0])};
-		//cout << "cross: " << cross[0] << " , " << cross[1] << " , " << cross[2] << endl;
-		double area = 0.5*sqrt(((cross[0]*cross[0])+(cross[1]*cross[1])+(cross[2]*cross[2])));
-		Areas[i/9] = area;
-		/*
-		if ((area > 8.0) && (area < 11.0) ) {
-		cout << "----------------------------------------------------------" << endl;
-		cout << "FACET: " << i/9 << endl;
-		cout << "AREA: " << area << endl;
-		cout << triArray[i]   <<  "  " << triArray[i+1]  <<  "  " << triArray[i+2] << endl;
-		cout << triArray[i+3] <<  "  " << triArray[i+4]  <<  "  " << triArray[i+5] << endl;
-		cout << triArray[i+6] <<  "  " << triArray[i+7]  <<  "  " << triArray[i+8] << endl;
-		cout << "----------------------------------------------------------" << endl;
-		}
-		*/
-	}	
-	return Areas;
-} 
+ 
 

@@ -9,6 +9,7 @@ class Polyhedron{
 	int tricount;
 	int extcount;
 	int *exteriorArray;
+	int iteration;
 
 public:
 	Polyhedron(string input,string output);
@@ -21,6 +22,6 @@ public:
 	bool pointInTriangle(Triangle* tri,double x,double y,double z);
 	void parseToOutput(string input, string output);
 	double*  readOutputToArrays(string output);
-	double*  printAreas(string output);
 	bool checkDistanceCutoff(int index, double *b, Triangle* tri);
+	void combineDocs();
 };
