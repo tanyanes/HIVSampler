@@ -1,4 +1,4 @@
-#include<string>
+#include <string>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -14,6 +14,35 @@
 #include "ArithmeticHeader.h"
 #include <cstdlib>
 #include <ctime>
+//#include "libqhull.h"
+
+#include "libqhullcpp/RboxPoints.h"
+#include "libqhullcpp/QhullError.h"
+#include "libqhullcpp/QhullQh.h"
+#include "libqhullcpp/QhullFacet.h"
+#include "libqhullcpp/QhullFacetList.h"
+#include "libqhullcpp/QhullLinkedList.h"
+#include "libqhullcpp/QhullVertex.h"
+#include "libqhullcpp/Qhull.h"
+
+#include <cstdio>   /* for printf() of help message */
+#include <ostream>
+#include <stdexcept>
+
+using std::cerr;
+using std::cin;
+using std::cout;
+using std::endl;
+
+using orgQhull::Qhull;
+using orgQhull::QhullError;
+using orgQhull::QhullFacet;
+using orgQhull::QhullFacetList;
+using orgQhull::QhullQh;
+using orgQhull::RboxPoints;
+using orgQhull::QhullVertex;
+using orgQhull::QhullVertexSet;
+
 using namespace std;
 
 Polyhedron::Polyhedron(string input, string output)
@@ -28,6 +57,10 @@ Polyhedron::Polyhedron(string input, string output)
 	double *points = new double[3*pointct-3];
 	points = readOutputToArrays(output);
 	pointArray = points;
+	//points = points;
+        coordT *pointsT;
+	Qhull qhull;
+        //memcpy(pointsT,points,(3*pointct-3));
 	Triangle *triArray = new Triangle[(pointct-1)/3];
 	setTriCount(input,output);
 	for(int i = 0; i < (3*pointct-3);i+=9){
@@ -41,7 +74,12 @@ Polyhedron::Polyhedron(string input, string output)
 	copyToExterior();
 	iteration = 0;
 	sampleLargeTriangles();
-	combineDocs();
+	//delaunay, creates inputSol
+	//parseToOutput(inputSol,outputSol)
+	//reset points array and tri array
+	//copyToExterior()
+	//voronoiLargeTriangles
+	//makeGaussianDoc()
 	cout << "MADE A POLYHEDRON" << endl;
 }
 
@@ -187,8 +225,7 @@ bool Polyhedron::checkDistanceCutoff(int index, double *b, Triangle *tri){
         for(int i = 0; i < tricount; i++){
 		if(exteriorArray[i] == 1){
                 	triangleArray[i].getPoints2(triangleInTriList);
-                	tri->getPoints2(points);
-		
+			tri->getPoints2(points);		
 
                 double planePoint[3] = {triangleInTriList[0],triangleInTriList[1],triangleInTriList[2]};
                 double planeNormal[3] ={triangleArray[i].getNormal()[0],triangleArray[i].getNormal()[1],triangleArray[i].getNormal()[2]};
@@ -312,28 +349,19 @@ void Polyhedron::sampleLargeTriangles(){
     vector< cy::Point3f > outputPoints(numpts);
     float d_max = 1.0;
     wse.Eliminate( inputPoints.data(), inputPoints.size(),outputPoints.data(), outputPoints.size(), d_max, 2);
-    
-    if((numpts > 0) && (iteration == 0)){
+
+    if(numpts > 0){
     	FILE* fp;
-    	fp = fopen("anything.xyz","w");
+    	fp = fopen("solutionset.txt","w");
     	for(int i = 0; i < numpts; i++){
          	cout << "O     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
-         	fprintf(fp,"O   %1.6f      %1.6f     %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
+         	fprintf(fp,"       %1.6f %1.6f %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
     	}
     	fclose(fp);
     }
-   if((numpts>0) && (iteration>0)){
-	FILE* fp;
-        fp = fopen("anything.xyz","a");
-        for(int i = 0; i < numpts; i++){
-                cout << "O     " << outputPoints[i].x << "     " << outputPoints[i].y << "      " << outputPoints[i].z << endl;
-                fprintf(fp,"O   %1.6f      %1.6f     %1.6f\n",outputPoints[i].x,outputPoints[i].y,outputPoints[i].z);
-        }
-        fclose(fp);
-   }
 
-double smallest = 20.0;    
-double counter = 0;
+    double smallest = 20.0;    
+    double counter = 0;
     for(int n = 0; n < tricount; n++){
 	for(int j = 0; j < numpts;j++){
 		triangleArray[n].getPoints2(pts);
@@ -367,19 +395,8 @@ double counter = 0;
 
 }
 
-void Polyhedron::combineDocs(){
-	std::ifstream ifile("unsolved1.xyz");
-	std::ofstream ofile("anything.xyz", std::ios::app);
-
-	if (!ifile.is_open()) {
-    		cout << "access denied" << endl;
-	}
-  	else if (!ofile.is_open()) {
-        	cout << "access denied" << endl;
-        }
-        else {
-            ofile << ifile.rdbuf();
-        }
+void Polyhedron::makeSolution(){
+	
 }
 
 //**********************************************************************************************************************************************************************************************************//

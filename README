@@ -1,0 +1,2 @@
+0) Makefile should compile code from src and produce a binary under bin.
+1) Binary in bin runs with data from directory data and produces and output in directory out

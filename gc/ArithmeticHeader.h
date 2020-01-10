@@ -1,8 +1,8 @@
-#pragma once
 #include <iostream>
+
 using namespace std;
 
-class Triangle{
+class Triangle {
 	double *point1;
 	double *point2;
 	double *point3;

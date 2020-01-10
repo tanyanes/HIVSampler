@@ -1,0 +1,49 @@
+ /* Includes */
+ #include <iostream>
+ #include "mkl.h"
+ #include <cmath>
+ using namespace std;
+ #include "ArithmeticHeader.h"
+ #include "ArithmeticHeader.cpp"
+ #include <ctime> 
+ #include "StreamHeader.h" 
+ #include "Stream.cpp"
+ /* Main program */
+ int main ()
+ {
+	//abc
+	srand(unsigned(time(NULL)));
+	parseToOutput();
+	readOutputToArrays();
+	printAreas();
+	/* 
+	//trying to make one triangle
+	double *p1 = new double[3] {-8.50647831,0.0,5.2573503};
+	double *p2 = new double[3] {-4.25322723,3.09011412,8.50654221};
+	double *p3 = new double[3] {-4.25322723,-3.09011412,8.50654221};
+	Triangle *trial = new Triangle(p1,p2,p3);
+	cout << "*******************" << endl;
+	int ct2 = 0;
+	while(ct2<100){
+		trial->PlacePointInTriangle();
+		ct2++;
+	}
+	delete trial;
+	cout << "*******************" << endl;
+	
+	//trying to make another triangle
+	double *p1A = new double[3] {4.253227,-3.090114,-8.506542};
+	double *p2A = new double[3] {-2.763880,-8.506493,-4.472198};
+	double *p3A = new double[3] {7.236073,-5.257253,-4.472195};
+	
+	Triangle *trial2 = new Triangle(p1A,p2A,p3A);
+	int ct = 0;
+	while(ct<100){
+		trial2->PlacePointInTriangle();
+		ct++;
+	}
+	delete trial2;
+	cout << "********************" << endl;
+	*/
+	return 0;
+ }

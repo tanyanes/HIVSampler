@@ -1,0 +1,5 @@
+LDFLAGS=-L/home/tanyanes/local/lib
+CFLAGS=-I/home/tanyanes/local/include
+doc/
+newTest: newTest.cpp ArithmeticHeader.cpp
+	icpc $CFLAGS $LDFLAGS -o newTest newTest.cpp -mkl

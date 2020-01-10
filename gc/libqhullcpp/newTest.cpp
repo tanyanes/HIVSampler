@@ -7,6 +7,37 @@
  #include <ctime> 
  #include "StreamHeader.h" 
  #include "Stream.cpp"
+ //#include "libqhull.h"
+
+#include "libqhullcpp/RboxPoints.h"
+#include "libqhullcpp/QhullError.h"
+#include "libqhullcpp/QhullQh.h"
+#include "libqhullcpp/QhullFacet.h"
+#include "libqhullcpp/QhullFacetList.h"
+#include "libqhullcpp/QhullLinkedList.h"
+#include "libqhullcpp/QhullVertex.h"
+#include "libqhullcpp/Qhull.h"
+
+#include <cstdio>   /* for printf() of help message */
+#include <ostream>
+#include <stdexcept>
+
+using std::cerr;
+using std::cin;
+using std::cout;
+using std::endl;
+
+using namespace orgQhull;
+
+using orgQhull::Qhull;
+using orgQhull::QhullError;  
+using orgQhull::QhullFacet;
+using orgQhull::QhullFacetList;
+using orgQhull::QhullQh;
+using orgQhull::RboxPoints;
+using orgQhull::QhullVertex;
+using orgQhull::QhullVertexSet; 
+
  using namespace std;
  /* Main program */
  int main ()

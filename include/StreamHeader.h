@@ -1,6 +1,6 @@
-#pragma once
 #include <iostream>
 #include "ArithmeticHeader.h"
+//#include "libqhull.h"
 using namespace std;
 
 class Polyhedron{
@@ -24,4 +24,5 @@ public:
 	double*  readOutputToArrays(string output);
 	bool checkDistanceCutoff(int index, double *b, Triangle* tri);
 	void combineDocs();
+	void makeSolution();
 };
