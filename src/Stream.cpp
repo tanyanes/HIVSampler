@@ -25,30 +25,30 @@ Polyhedron::Polyhedron(string input, string output)
 {
 	int pointct = 0;
 	parseToOutput(input,output);
-	//string line;
-	//ifstream file(output);
-	//while(getline(file,line)){
-	//	pointct++;
-	//}
-	//double *points = new double[3*pointct-3];
-	//points = readOutputToArrays(output);
-	//pointArray = points;
+	string line;
+	ifstream file("../data/" + output);
+	while(getline(file,line)){
+		pointct++;
+	}
+	double *points = new double[3*pointct-3];
+	points = readOutputToArrays(output);
+	pointArray = points;
         //coordT *pointsT;
 	//Qhull qhull;
         //memcpy(pointsT,points,(3*pointct-3));
-	//Triangle *triArray = new Triangle[(pointct-1)/3];
-	//setTriCount(input,output);
-	//for(int i = 0; i < (3*pointct-3);i+=9){
-	//	double *aa = new double[3] {pointArray[i+0],pointArray[i+1],pointArray[i+2]};
-	//	double *bb = new double[3] {pointArray[i+3],pointArray[i+4],pointArray[i+5]};
-	//	double *cc = new double[3] {pointArray[i+6],pointArray[i+7],pointArray[i+8]};
-	//	Triangle *bee = new Triangle(aa,bb,cc);
-	//	triArray[i/9] = *bee;
-	//}
-	//triangleArray = triArray;
-	//copyToExterior();
-	//iteration = 0;
-	//sampleLargeTriangles();
+	Triangle *triArray = new Triangle[(pointct-1)/3];
+	setTriCount(input,output);
+	for(int i = 0; i < (3*pointct-3);i+=9){
+		double *aa = new double[3] {pointArray[i+0],pointArray[i+1],pointArray[i+2]};
+		double *bb = new double[3] {pointArray[i+3],pointArray[i+4],pointArray[i+5]};
+		double *cc = new double[3] {pointArray[i+6],pointArray[i+7],pointArray[i+8]};
+		Triangle *bee = new Triangle(aa,bb,cc);
+		triArray[i/9] = *bee;
+	}
+	triangleArray = triArray;
+	copyToExterior();
+	iteration = 0;
+	sampleLargeTriangles();
 	//delaunay, creates inputSol
 	//parseToOutput(inputSol,outputSol)
 	//reset points array and tri array
@@ -70,7 +70,7 @@ void Polyhedron::setTriCount(string input, string output){
 	int pointct = 0;
         parseToOutput(input,output);
         string line;
-        ifstream file(output);
+        ifstream file("../data/" + output);
         while(getline(file,line)){
                 pointct++;
         }
@@ -255,7 +255,6 @@ bool Polyhedron::checkDistanceCutoff(int index, double *b, Triangle *tri){
 
 
 void Polyhedron::sampleLargeTriangles(){
-	/*
     int bigCount = 0;
     double bigSurfaceArea = 0;
     double *pts;
@@ -368,7 +367,6 @@ void Polyhedron::sampleLargeTriangles(){
 
     delete[] pts;
     delete[] tempPt;
-	*/
 
 }
 
@@ -385,16 +383,24 @@ double Polyhedron::distance(double x1,double y1,double z1,double x2,double y2,do
 
 void Polyhedron::parseToOutput(string input, string output)
 { 
-  cout << "GOT HERE" << endl;
-  ifstream is(input); 
+  ifstream is; 
+  is.open("../data/" + input);
   cout << "input is: " << input << endl;
+
+if (is.fail())
+{
+cout << "\nThe file was not successfully opened for reading."
+<< "\nPlease check that the file currently exists.\n\n";
+exit(1);
+}
+
   ofstream ofs; 
-  ofs.open(output, ofstream::out);
-  cout << "GOT HERE 2" << endl;    
+  ofs.open("../data/" + output, ofstream::out);   
   cout << "output is: " << output << endl;                 
   char c; 
   int line_no = 1; 
-  cout << is.get(c) << endl;
+  cout << "is the infile open? : " << is.is_open() << endl;
+  cout << "is the outfile open? : " << ofs.is_open() << endl;
   while (is.get(c)) 
   {
   	if (c == '\n'){ 
@@ -402,7 +408,6 @@ void Polyhedron::parseToOutput(string input, string output)
 	} 
   	if (((line_no-1) % 5 == 2) || ((line_no-1) % 5 == 3) || ((line_no-1) % 5 == 4)){ 
   			ofs << c; 
-	cout << "I'm writing" << endl;
 	}
   }                    
   cout << "GOT TO END" << endl;                                                                                  
@@ -412,7 +417,7 @@ void Polyhedron::parseToOutput(string input, string output)
 
 double* Polyhedron::readOutputToArrays(string output){
 	std::ifstream inFile;
-	inFile.open(output);
+	inFile.open("../data/" + output);
 
 	std::stringstream strStream;
 	strStream << inFile.rdbuf();
@@ -422,7 +427,12 @@ double* Polyhedron::readOutputToArrays(string output){
 	int ct = 0;
 	int pointct = 0;
     	string line;
-    	ifstream file(output);
+    	ifstream file("../data/" + output);
+
+	//cout << "is the infile open? " << inFile.is_open() << endl;
+	//cout << "called readOutputToArrays" << endl;
+
+
     	while (getline(file, line)){
         	pointct++;	
  	}
@@ -459,6 +469,7 @@ double* Polyhedron::readOutputToArrays(string output){
 	for(int i = 0; i < pointct; ++i){
 		delete[] triPoints[i];
 	}
+
 	return PointList;
 }
  
