@@ -8,12 +8,30 @@
 // #include "libqhull.h"
 #include <ostream>
 
- using namespace std;
+#include "libqhull_r/libqhull_r.h"
+#include "libqhullcpp/Qhull.h"
+
+using std::cerr;
+using std::cin;
+using std::cout;
+using std::endl;
+
+#include "libqhullcpp/RboxPoints.h"
+#include "libqhullcpp/QhullFacetList.h"
+
+//#include "RboxPoints.h"
+#include "libqhullcpp/QhullError.h"
+#include "libqhullcpp/QhullQh.h"
+#include "libqhullcpp/QhullFacet.h"
+//#include "QhullFacetList.h"
+#include "libqhullcpp/QhullLinkedList.h"
+#include "libqhullcpp/QhullVertex.h"
+//#include "Qhull.h"
+
  int main ()
  {
 	srand(unsigned(time(NULL)));
 	cout << "COMPILATION WORKED!!!" << endl;
-	cout << "aaaaaa" << endl;
 	/*
 	cout << "*******************" << endl;
 	//trying to make a triangle, fill with 100 points
@@ -30,7 +48,12 @@
 	delete trial2;
 	cout << "********************" << endl;
 	*/
-	Polyhedron *poly = new Polyhedron("Test2.txt","output2.txt");
-	delete poly;
+	//Polyhedron *poly = new Polyhedron("Test2.txt","output2.txt");
+	//delete poly;
+	//Qhull qhull;
+	orgQhull::RboxPoints rbox("100");
+	orgQhull::Qhull q(rbox, "");
+	orgQhull::QhullFacetList facets= q.facetList();
+        cout << facets;
 	return 0;
  }

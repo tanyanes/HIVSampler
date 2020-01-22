@@ -17,24 +17,27 @@
 #include <cstdlib>
 #include <ctime>
 #include <stdexcept>
-
-#include "libqhullcpp/Qhull.h"
+/*
+//includes related to C++
 #include "libqhull_r/libqhull_r.h"
+//#include "libqhullcpp/Qhull.h"
 
+#include "libqhullcpp/RboxPoints.h"
+#include "libqhullcpp/QhullError.h"
+#include "libqhullcpp/Qhull.h"
+#include "libqhullcpp/QhullQh.h"
+#include "libqhullcpp/QhullFacet.h"
+#include "libqhullcpp/QhullFacetList.h"
+#include "libqhullcpp/QhullLinkedList.h"
+#include "libqhullcpp/QhullVertex.h"
+#include "libqhullcpp/QhullSet.h"
+#include "libqhullcpp/QhullVertexSet.h"
+#include <vector>
+*/
 using std::cerr;
 using std::cin;
 using std::cout;
 using std::endl;
-
-using orgQhull::Qhull;
-using orgQhull::QhullError;
-using orgQhull::QhullFacet;
-using orgQhull::QhullFacetList;
-using orgQhull::QhullQh;
-using orgQhull::RboxPoints;
-using orgQhull::QhullVertex;
-using orgQhull::QhullVertexSet;
-
 
 //using namespace std;
 
@@ -50,8 +53,8 @@ Polyhedron::Polyhedron(string input, string output)
 	double *points = new double[3*pointct-3];
 	points = readOutputToArrays(output);
 	pointArray = points;
-        coordT *pointsT;
-	Qhull qhull;
+        //coordT *pointsT;
+	//orgQhull::Qhull qhull;
         //memcpy(pointsT,points,(3*pointct-3));
 	Triangle *triArray = new Triangle[(pointct-1)/3];
 	setTriCount(input,output);
