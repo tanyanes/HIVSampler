@@ -3,7 +3,7 @@ CXX=icpc
 CXXFLAGS= -Wall -g
 
 #paths to relevant directories that are being used by my program
-INCLUDE = -I./include/ -I./gc -I./lib/cyCode
+INCLUDE = -I./include/ -I./lib/cyCode -L/home/tanyanes/local/include/libqhull
 SOURCE = ./src
 OBJ = ./obj
 BIN = ./bin
@@ -11,7 +11,7 @@ DATA = ./data
 LIB = ./lib
 
 #paths to libraries and library flags
-LDFLAGS = -mkl -qopenmp -pg -std=c++11 \
+LDFLAGS = -mkl -qopenmp -pg -std=c++11\
 	#-lqhull
 
 #define object files and source files

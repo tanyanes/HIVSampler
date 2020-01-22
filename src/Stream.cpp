@@ -17,9 +17,26 @@
 #include <cstdlib>
 #include <ctime>
 #include <stdexcept>
-//#include "libqhull.h"
 
-using namespace std;
+#include "libqhullcpp/Qhull.h"
+#include "libqhull_r/libqhull_r.h"
+
+using std::cerr;
+using std::cin;
+using std::cout;
+using std::endl;
+
+using orgQhull::Qhull;
+using orgQhull::QhullError;
+using orgQhull::QhullFacet;
+using orgQhull::QhullFacetList;
+using orgQhull::QhullQh;
+using orgQhull::RboxPoints;
+using orgQhull::QhullVertex;
+using orgQhull::QhullVertexSet;
+
+
+//using namespace std;
 
 Polyhedron::Polyhedron(string input, string output)
 {
@@ -33,8 +50,8 @@ Polyhedron::Polyhedron(string input, string output)
 	double *points = new double[3*pointct-3];
 	points = readOutputToArrays(output);
 	pointArray = points;
-        //coordT *pointsT;
-	//Qhull qhull;
+        coordT *pointsT;
+	Qhull qhull;
         //memcpy(pointsT,points,(3*pointct-3));
 	Triangle *triArray = new Triangle[(pointct-1)/3];
 	setTriCount(input,output);

@@ -108,7 +108,7 @@ static _cy_nullptr_t nullptr;
 
 // std::is_trivially_copyable
 #if _CY_COMPILER_VER_MEETS(1700,50000,30400,1300)
-# define _cy_std_is_trivially_copyable 1
+//# define _cy_std_is_trivially_copyable 1
 #endif
 
 //////////////////////////////////////////////////////////////////////////
